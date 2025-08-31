@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  /* Smooth transition for theme changes */
+  transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+@layer base {
+  :root {
+    --background: 240 10% 99%;
+    --foreground: 224 71.4% 4.1%;
+    --card: 240 5.9% 100%;
+    --card-foreground: 224 71.4% 4.1%;
+    --popover: 240 5.9% 100%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 210 40% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 40 90% 60%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 210 40% 50%;
+    --chart-1: 210 40% 50%;
+    --chart-2: 166 60% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+    --sidebar-background: 220 13% 13%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 210 40% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 10% 20%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 220 10% 20%;
+    --sidebar-ring: 210 40% 50%;
+  }
+
+  .dark {
+    --background: 220 13% 10%;
+    --foreground: 0 0% 98%;
+    --card: 220 13% 13%;
+    --card-foreground: 0 0% 98%;
+    --popover: 220 13% 13%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 40% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 10% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 220 10% 20%;
+    --muted-foreground: 240 3.8% 60%;
+    --accent: 40 90% 60%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 10% 20%;
+    --input: 220 10% 20%;
+    --ring: 210 40% 50%;
+    --sidebar-background: 220 13% 10%;
+    --sidebar-accent: 220 10% 23%;
+    --sidebar-border: 220 10% 23%;
+  }
+
+  /* Morning Theme */
+  .theme-morning {
+    --background: 210 40% 98%;
+    --foreground: 210 10% 30%;
+    --primary: 190 60% 50%; /* Bright Sky Blue */
+    --accent: 45 90% 55%;   /* Sunny Yellow */
+    --card: 210 40% 100%;
+    --border: 210 30% 90%;
+  }
+  
+  /* Afternoon Theme (Default) */
+  .theme-afternoon {
+    --background: 240 10% 99%;
+    --primary: 210 40% 50%;
+    --accent: 40 90% 60%;
+  }
+
+  /* Evening Theme */
+  .theme-evening {
+    --background: 20 15% 15%; /* Deep twilight blue */
+    --foreground: 20 5% 80%;
+    --primary: 25 80% 60%;  /* Warm Orange */
+    --accent: 210 30% 65%;   /* Soft Indigo */
+    --card: 20 15% 20%;
+    --card-foreground: 20 5% 85%;
+    --border: 20 10% 30%;
+    --muted: 20 15% 25%;
+    --muted-foreground: 20 5% 60%;
+    --input: 20 10% 30%;
+    --ring: 25 80% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
