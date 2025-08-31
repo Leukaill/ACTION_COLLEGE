@@ -1,408 +1,312 @@
+'use client'
 
-"use client"
-
-import Link from "next/link";
-import React, { useState, useEffect, useRef } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts"
-import {
-  Award,
-  BookOpen,
-  Bot,
-  BrainCircuit,
-  Briefcase,
-  Calendar,
-  ChevronRight,
-  Code,
-  Coffee,
-  GraduationCap,
-  LayoutGrid,
-  Loader2,
-  Map,
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/contexts/auth-context'
+import { supabase } from '@/lib/supabase'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { 
+  BookOpen, 
+  Calendar, 
+  GraduationCap, 
+  Users, 
+  Library, 
+  Navigation, 
+  CreditCard, 
+  Shield,
+  Activity,
   MessageSquare,
-  Moon,
-  PartyPopper,
-  Pin,
-  CheckCircle,
-  Square,
-  Star,
-  Sun,
-  Target,
+  Settings,
   TrendingUp,
-  Users,
-  Volume2,
-  Zap,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { getSmartDashboardInsights, type SmartDashboardInsightsOutput } from "@/ai/flows/smart-dashboard-insights";
-import { getCampusEvents } from "@/ai/flows/ai-assistant-campus-info";
-import { textToSpeech } from "@/ai/flows/text-to-speech";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { isToday } from 'date-fns';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { useAuth } from "@/hooks/use-auth";
-import { getAcademicDataForUser, type AcademicData } from "@/services/campus-data";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+  Clock,
+  MapPin
+} from 'lucide-react'
 
-const quickActions = [
-    { title: "AI Assistant", subtitle: "Get instant answers", icon: Bot, href: "/dashboard/assistant", color: 'from-indigo-400 to-purple-500' },
-    { title: "Study Optimizer", subtitle: "Enhance learning", icon: BrainCircuit, href: "/dashboard/optimizer", color: 'from-blue-400 to-cyan-500' },
-    { title: "Campus Navigator", subtitle: "Find your way", icon: Map, href: "/dashboard/navigator", color: 'from-emerald-400 to-green-500' },
-    { title: "Full Calendar", subtitle: "See all events", icon: Calendar, href: "/dashboard/calendar", color: 'from-orange-400 to-red-500' }
-];
-
-const eventIcons: { [key: string]: React.ReactNode } = {
-  "examinations": <GraduationCap className="h-5 w-5" />,
-  "registration": <CheckCircle className="h-5 w-5" />,
-  "fest": <PartyPopper className="h-5 w-5" />,
-  "fair": <Briefcase className="h-5 w-5" />,
-  "hackathon": <Code className="h-5 w-5" />,
-  "default": <Calendar className="h-5 w-5" />,
+interface DashboardStats {
+  totalCourses: number
+  enrolledCourses: number
+  upcomingEvents: number
+  communityMembers: number
+  libraryBooks: number
+  recentActivities: number
 }
 
-function getEventIcon(eventName: string) {
-    const lowerCaseName = eventName.toLowerCase();
-    if (lowerCaseName.includes("exam")) return eventIcons.examinations;
-    if (lowerCaseName.includes("registration")) return eventIcons.registration;
-    if (lowerCaseName.includes("fest")) return eventIcons.fest;
-    if (lowerCaseName.includes("fair")) return eventIcons.fair;
-    if (lowerCaseName.includes("hackathon")) return eventIcons.hackathon;
-    return eventIcons.default;
+interface RecentActivity {
+  id: string
+  type: 'course_enrollment' | 'event_reminder' | 'payment' | 'grade_update'
+  title: string
+  description: string
+  timestamp: string
 }
 
-const gpaChartConfig = {
-  gpa: {
-    label: "GPA",
-    color: "hsl(var(--chart-1))",
-  },
-}
-
-export default function SmartDashboardPage() {
-  const { user } = useAuth();
-  const [insights, setInsights] = useState<SmartDashboardInsightsOutput | null>(null);
-  const [isLoadingInsights, setIsLoadingInsights] = useState(true);
-  const [todaysEvents, setTodaysEvents] = useState<any[]>([]);
-  const [isLoadingEvents, setIsLoadingEvents] = useState(true);
-  const [academicData, setAcademicData] = useState<AcademicData | null>(null);
-  const [isLoadingData, setIsLoadingData] = useState(true);
-  
-  const [greeting, setGreeting] = useState("Welcome back");
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
-
-  const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
-  const [audioDataUri, setAudioDataUri] = useState<string | null>(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+export default function DashboardPage() {
+  const { user } = useAuth()
+  const [stats, setStats] = useState<DashboardStats>({
+    totalCourses: 0,
+    enrolledCourses: 0,
+    upcomingEvents: 0,
+    communityMembers: 0,
+    libraryBooks: 0,
+    recentActivities: 0
+  })
+  const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setCurrentTime(new Date());
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    
-    const hours = new Date().getHours();
-    const userName = user?.displayName?.split(' ')[0] || '';
+    fetchDashboardData()
+  }, [])
 
-    if (hours < 12) setGreeting(`Good morning, ${userName}`);
-    else if (hours < 17) setGreeting(`Good afternoon, ${userName}`);
-    else setGreeting(`Good evening, ${userName}`);
-
-    const fetchTodaysEvents = async () => {
-        setIsLoadingEvents(true);
-        try {
-            const allEvents = await getCampusEvents({});
-            const today = allEvents.filter(event => isToday(new Date(event.date)))
-                                 .sort((a,b) => a.time.localeCompare(b.time));
-            setTodaysEvents(today);
-        } catch (error) {
-            console.error("Failed to fetch today's events:", error);
-        } finally {
-            setIsLoadingEvents(false);
-        }
-    }
-    
-    const fetchAcademicData = async () => {
-        if (!user) return;
-        setIsLoadingData(true);
-        setIsLoadingInsights(true);
-        try {
-            const data = await getAcademicDataForUser(user.uid);
-            setAcademicData(data);
-            
-            const completedCourses = data.semesters
-                .filter(s => s.status === 'Completed')
-                .flatMap(s => s.modules)
-                .map(m => `${m.name} (${m.grade})`)
-                .slice(0, 5).join(', ');
-
-            const currentCourses = data.semesters
-                .find(s => s.status === 'In Progress')
-                ?.modules.map(m => m.name).join(', ');
-
-            const academicHistory = `Completed courses: ${completedCourses}. Currently taking: ${currentCourses}.`;
-            const studentGoals = `Wants to achieve a GPA of 3.8, specialize in Artificial Intelligence, and secure an internship at a tech company next summer.`;
-
-            const insightsResult = await getSmartDashboardInsights({ academicHistory, studentGoals });
-            setInsights(insightsResult);
-
-        } catch (error) {
-            console.error("Failed to fetch academic data or insights:", error);
-        } finally {
-            setIsLoadingData(false);
-            setIsLoadingInsights(false);
-        }
-    }
-
-    fetchTodaysEvents();
-    if(user) fetchAcademicData();
-
-    return () => clearInterval(timer);
-  }, [user]);
-  
-   useEffect(() => {
-    const audioEl = audioRef.current;
-    if (audioEl) {
-      audioEl.onended = () => setIsPlaying(false);
-      if (isPlaying) {
-        audioEl.play().catch(e => console.error("Audio play failed:", e));
-      } else {
-        audioEl.pause();
-      }
-    }
-  }, [isPlaying, audioDataUri]);
-  
-  const gpaData = academicData?.semesters
-      .filter(s => s.status === 'Completed' && parseFloat(s.gpa) > 0)
-      .map(s => ({
-          semester: s.name.replace(/.*\(([^)]+)\s\d{4}\).*/, '$1'), // "First Semester (Sep-Dec 2023)" -> "Sep-Dec"
-          gpa: parseFloat(s.gpa)
-      })) || [];
-
-    const achievements = academicData?.semesters
-        .flatMap(s => s.modules)
-        .slice(-3) // Get last 3 courses as mock achievements
-        .map(m => ({ title: m.name, status: m.grade, icon: m.grade.startsWith('A') ? Award : BookOpen })) || [];
-
-
-  const handleAudioGeneration = async () => {
-    if (isGeneratingAudio || isPlaying || !todaysEvents || todaysEvents.length === 0) return;
-    setIsGeneratingAudio(true);
-    setAudioDataUri(null);
+  const fetchDashboardData = async () => {
     try {
-      const summaryText = "Here is your summary for today. " + todaysEvents
-        .map(item => `At ${item.time}, you have ${item.name} at ${item.location}.`)
-        .join('. ');
+      // Fetch courses count
+      const { count: coursesCount } = await supabase
+        .from('courses')
+        .select('*', { count: 'exact', head: true })
 
-      const response = await textToSpeech({ text: summaryText });
-      setAudioDataUri(response.audioDataUri);
-      setIsPlaying(true);
+      // Fetch user's enrollments
+      const { data: enrollments } = await supabase
+        .from('enrollments')
+        .select('*')
+        .eq('user_id', user?.id)
+
+      // Fetch upcoming events
+      const { data: events } = await supabase
+        .from('events')
+        .select('*')
+        .gte('start_date', new Date().toISOString())
+        .order('start_date', { ascending: true })
+        .limit(5)
+
+      // Mock data for other stats (in production, these would come from actual tables)
+      const mockStats = {
+        totalCourses: coursesCount || 0,
+        enrolledCourses: enrollments?.length || 0,
+        upcomingEvents: events?.length || 0,
+        communityMembers: 1250,
+        libraryBooks: 45000,
+        recentActivities: 8
+      }
+
+      setStats(mockStats)
+
+      // Create mock recent activities based on real data
+      const activities: RecentActivity[] = []
+      
+      if (enrollments && enrollments.length > 0) {
+        activities.push({
+          id: '1',
+          type: 'course_enrollment',
+          title: 'Course Enrolled',
+          description: `Successfully enrolled in ${enrollments[0].course_id}`,
+          timestamp: new Date().toISOString()
+        })
+      }
+
+      if (events && events.length > 0) {
+        activities.push({
+          id: '2',
+          type: 'event_reminder',
+          title: 'Upcoming Event',
+          description: `"${events[0].title}" starts in 2 days`,
+          timestamp: new Date().toISOString()
+        })
+      }
+
+      setRecentActivities(activities)
     } catch (error) {
-      console.error("Failed to generate audio:", error);
+      console.error('Error fetching dashboard data:', error)
     } finally {
-      setIsGeneratingAudio(false);
+      setLoading(false)
     }
-  };
-  
-    const formatTime = (date: Date | null) => {
-    if (!date) return <Loader2 className="h-4 w-4 animate-spin mx-auto" />;
-    return date.toLocaleTimeString('en-US', {
-      hour12: true,
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-  };
+  }
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'course_enrollment':
+        return <BookOpen className="h-4 w-4 text-green-600" />
+      case 'event_reminder':
+        return <Calendar className="h-4 w-4 text-blue-600" />
+      case 'payment':
+        return <CreditCard className="h-4 w-4 text-purple-600" />
+      case 'grade_update':
+        return <TrendingUp className="h-4 w-4 text-orange-600" />
+      default:
+        return <Activity className="h-4 w-4 text-gray-600" />
+    }
+  }
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'course_enrollment':
+        return 'bg-green-100 text-green-800'
+      case 'event_reminder':
+        return 'bg-blue-100 text-blue-800'
+      case 'payment':
+        return 'bg-purple-100 text-purple-800'
+      case 'grade_update':
+        return 'bg-orange-100 text-orange-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 text-gray-800 overflow-x-hidden">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-green-400 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse" style={{animationDelay: '2s'}}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-orange-400 rounded-full mix-blend-multiply filter blur-xl opacity-8 animate-pulse" style={{animationDelay: '4s'}}></div>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Welcome back, {user?.user_metadata?.full_name || 'Student'}!
+        </h1>
+        <p className="text-gray-600 mt-2">
+          Here's what's happening with your academic journey today.
+        </p>
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
-        <div className="backdrop-blur-sm bg-white/80 rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-800">
-                {greeting}! ✨
-              </h1>
-              <p className="text-gray-600 mt-2 text-base md:text-lg">Here's your personalized snapshot for today</p>
-            </div>
-            <div className="text-right">
-              <div className="text-2xl md:text-3xl font-mono text-blue-600 font-semibold">
-                {formatTime(currentTime)}
-              </div>
-              <div className="text-gray-500 text-xs md:text-sm mt-1">
-                {currentTime?.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Courses</CardTitle>
+            <BookOpen className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.totalCourses}</div>
+            <p className="text-xs text-muted-foreground">
+              Available for enrollment
+            </p>
+          </CardContent>
+        </Card>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="backdrop-blur-sm bg-white/80 rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center">
-                 <Target className="w-8 h-8 text-blue-500 mr-3" />
-                 <h2 className="text-2xl font-bold text-gray-800">Today's Focus</h2>
-              </div>
-              <Button variant="ghost" size="sm" onClick={handleAudioGeneration} disabled={isGeneratingAudio || isPlaying || isLoadingEvents || todaysEvents.length === 0}>
-                  {isGeneratingAudio ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Volume2 className="mr-2 h-4 w-4"/>} Listen
-              </Button>
-               {audioDataUri && <audio ref={audioRef} src={audioDataUri} />}
-            </div>
-            <p className="text-gray-600 mb-6 text-sm">Your scannable guide to the day ahead. Stay on track!</p>
-            
-            {isLoadingEvents ? (
-              <div className="flex items-center justify-center h-48"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>
-            ) : todaysEvents.length > 0 ? (
-               <ul className="space-y-4">
-                  {todaysEvents.map((item) => (
-                  <li key={item.name} className="flex items-start gap-4 group">
-                      <div className="font-mono text-sm text-gray-500 w-20 pt-1 text-right">{item.time}</div>
-                      <div className="relative w-px h-full bg-gray-200 -ml-2 mr-4">
-                          <div className="absolute top-1 left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-white border-2 border-blue-500 flex items-center justify-center transition-transform duration-300 group-hover:scale-125">
-                              <div className="h-2 w-2 rounded-full bg-blue-500" />
-                          </div>
-                      </div>
-                      <div className="flex-1 -mt-1.5 bg-white/50 p-4 rounded-lg border border-gray-100 hover:border-blue-300 transition-colors duration-300">
-                          <p className="font-bold text-gray-800">{item.name}</p>
-                          <div className="flex items-center text-sm text-gray-500 mt-1">
-                              <Pin className="h-4 w-4 mr-1.5" />
-                              {item.location}
-                          </div>
-                      </div>
-                  </li>
-                  ))}
-              </ul>
-            ) : (
-              <div className="flex items-center justify-center py-12 bg-gradient-to-r from-blue-50 to-green-50 rounded-xl border border-blue-100">
-                <div className="text-center">
-                  <Coffee className="w-16 h-16 text-orange-400 mx-auto mb-4 opacity-60" />
-                  <p className="text-xl text-gray-700">No events scheduled for today</p>
-                  <p className="text-blue-600 mt-2">Enjoy your day or plan ahead! 🌟</p>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Enrolled Courses</CardTitle>
+            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.enrolledCourses}</div>
+            <p className="text-xs text-muted-foreground">
+              Currently studying
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
+            <p className="text-xs text-muted-foreground">
+              This week
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Community</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.communityMembers}</div>
+            <p className="text-xs text-muted-foreground">
+              Active students
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>
+            Access your most used features quickly
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button variant="outline" className="h-20 flex-col">
+              <BookOpen className="h-6 w-6 mb-2" />
+              <span className="text-sm">Academics</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col">
+              <Calendar className="h-6 w-6 mb-2" />
+              <span className="text-sm">Calendar</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col">
+              <MessageSquare className="h-6 w-6 mb-2" />
+              <span className="text-sm">Chat</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col">
+              <Settings className="h-6 w-6 mb-2" />
+              <span className="text-sm">Profile</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Recent Activities */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activities</CardTitle>
+          <CardDescription>
+            Your latest academic activities and updates
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {recentActivities.length > 0 ? (
+              recentActivities.map((activity) => (
+                <div key={activity.id} className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    {getActivityIcon(activity.type)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900">
+                      {activity.title}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {activity.description}
+                    </p>
+                  </div>
+                  <div className="flex-shrink-0">
+                    <Badge className={getActivityColor(activity.type)}>
+                      {activity.type.replace('_', ' ')}
+                    </Badge>
+                  </div>
+                  <div className="flex-shrink-0 text-xs text-gray-400">
+                    <Clock className="h-3 w-3 inline mr-1" />
+                    {new Date(activity.timestamp).toLocaleDateString()}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Activity className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p>No recent activities</p>
+                <p className="text-sm">Your activities will appear here</p>
               </div>
             )}
           </div>
-
-          <div className="backdrop-blur-sm bg-white/80 rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
-            <div className="flex items-center mb-6">
-              <TrendingUp className="w-8 h-8 text-green-500 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-800">Academic Progress</h2>
-            </div>
-            {isLoadingData ? (
-                 <div className="h-[250px] w-full flex items-center justify-center"><Skeleton className="h-full w-full bg-gray-200" /></div>
-            ) : gpaData.length > 0 ? (
-                 <ChartContainer config={gpaChartConfig} className="min-h-[250px] w-full text-black">
-                    <BarChart accessibilityLayer data={gpaData} margin={{ top: 20, right: 20, bottom: 20, left: -20 }}>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="rgba(0, 0, 0, 0.1)"/>
-                        <XAxis dataKey="semester" tick={{ fill: 'rgba(0, 0, 0, 0.7)' }} tickLine={{ stroke: 'rgba(0, 0, 0, 0.2)' }} />
-                        <YAxis domain={[2, 4]} tick={{ fill: 'rgba(0, 0, 0, 0.7)' }} tickLine={{ stroke: 'rgba(0, 0, 0, 0.2)' }}/>
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent className="bg-white/80 border-gray-300 backdrop-blur-sm" />} />
-                        <Bar dataKey="gpa" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                    </BarChart>
-                </ChartContainer>
-            ) : (
-                <div className="text-center py-10 text-gray-500 h-[250px] flex flex-col items-center justify-center">No completed semesters to display.</div>
-            )}
-          </div>
-        </div>
-
-        <div className="backdrop-blur-sm bg-white/80 rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center mb-6">
-            <Zap className="w-8 h-8 text-yellow-500 mr-3" />
-            <h2 className="text-2xl font-bold text-gray-800">AI-Powered Insights</h2>
-          </div>
-          {isLoadingInsights ? (
-             <div className="flex items-center justify-center h-48"><Loader2 className="h-8 w-8 animate-spin text-yellow-500" /></div>
-          ) : insights ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="p-6 bg-gradient-to-r from-red-50 to-orange-50 rounded-xl border border-red-200">
-                    <h3 className="font-semibold text-red-700 mb-2">📊 Key Insight</h3>
-                    <p className="text-sm text-gray-700">{insights.insights[0]}</p>
-                  </div>
-                  <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-200">
-                    <h3 className="font-semibold text-blue-700 mb-2">🎯 Focus Area</h3>
-                    <p className="text-sm text-gray-700">{insights.insights[1] || 'Keep up the great work!'}</p>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-4 text-blue-600">Recommended Courses</h3>
-                  <div className="space-y-3">
-                    {insights.courseRecommendations.map((course, index) => (
-                      <div key={index} className="flex items-center p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 cursor-pointer group">
-                        <Star className="w-4 h-4 text-yellow-500 mr-3 group-hover:scale-110 transition-transform" />
-                        <span className="text-sm text-gray-700 group-hover:text-blue-700 transition-colors">{course}</span>
-                        <ChevronRight className="w-4 h-4 text-gray-400 ml-auto group-hover:text-blue-500 transition-colors" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-          ) : (
-            <div className="text-center text-gray-500 py-8">No insights available.</div>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <div className="backdrop-blur-sm bg-white/80 rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800">Quick Actions</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                {quickActions.map((action) => (
-                  <Link href={action.href} key={action.title} className="group cursor-pointer">
-                    <div className={cn("p-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 border border-white/30 bg-gradient-to-br", action.color)}>
-                      <action.icon className="w-8 h-8 text-white mb-4 group-hover:scale-110 transition-transform" />
-                      <h3 className="font-semibold text-white mb-1">{action.title}</h3>
-                      <p className="text-white/80 text-sm">{action.subtitle}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            <div className="backdrop-blur-sm bg-white/80 rounded-2xl p-6 md:p-8 border border-gray-200 shadow-lg">
-              <h2 className="text-2xl font-bold mb-6 text-gray-800">Recent Achievements</h2>
-              {isLoadingData ? (
-                 <div className="flex items-center justify-center h-48"><Loader2 className="h-8 w-8 animate-spin text-blue-500" /></div>
-              ) : (
-              <div className="space-y-4">
-                {achievements.map((achievement, index) => (
-                  <div key={index} className="p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-blue-300 hover:bg-blue-50 transition-all duration-300 flex items-center gap-4">
-                    <achievement.icon className="w-6 h-6 text-blue-500 shrink-0" />
-                    <div>
-                        <h3 className="font-semibold text-gray-800">{achievement.title}</h3>
-                        <span className={cn("text-sm px-2 py-0.5 rounded-full",
-                          achievement.status.startsWith('A') ? 'bg-green-100 text-green-700' :
-                          achievement.status.startsWith('B') ? 'bg-blue-100 text-blue-700' :
-                          'bg-yellow-100 text-yellow-700'
-                        )}>
-                          Grade: {achievement.status}
-                        </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              )}
-            </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
-  );
+  )
 }

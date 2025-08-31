@@ -1,135 +1,291 @@
+'use client'
 
-import Link from "next/link"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { ArrowRight, Bot, BrainCircuit, Calendar, CreditCard, GraduationCap, Map, MessageSquare } from "lucide-react"
-import { Icons } from "@/components/ui/icons"
+import { useRouter } from 'next/navigation'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { 
+  GraduationCap, 
+  BookOpen, 
+  Users, 
+  Calendar, 
+  Shield, 
+  Activity,
+  ArrowRight,
+  CheckCircle,
+  Star
+} from 'lucide-react'
 
-export default function Home() {
+export default function LandingPage() {
+  const router = useRouter()
+
+  const features = [
+    {
+      icon: <BookOpen className="h-6 w-6" />,
+      title: "Academic Management",
+      description: "Track courses, grades, and academic progress in real-time"
+    },
+    {
+      icon: <Calendar className="h-6 w-6" />,
+      title: "Smart Calendar",
+      description: "Never miss important deadlines, exams, or campus events"
+    },
+    {
+      icon: <Users className="h-6 w-6" />,
+      title: "Community Hub",
+      description: "Connect with fellow students and faculty members"
+    },
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "Emergency Support",
+      description: "Quick access to emergency contacts and campus security"
+    },
+    {
+      icon: <Activity className="h-6 w-6" />,
+      title: "Study Optimizer",
+      description: "AI-powered recommendations for better academic performance"
+    },
+    {
+      icon: <GraduationCap className="h-6 w-6" />,
+      title: "Career Guidance",
+      description: "Explore career paths and internship opportunities"
+    }
+  ]
+
+  const testimonials = [
+    {
+      name: "Sarah Johnson",
+      role: "3rd Year Computer Science",
+      content: "ACTION_COLLEGE has transformed how I manage my academic life. Everything is so organized and accessible!",
+      rating: 5
+    },
+    {
+      name: "Michael Chen",
+      role: "2nd Year Engineering",
+      content: "The study optimizer feature helped me improve my GPA significantly. Highly recommended!",
+      rating: 5
+    },
+    {
+      name: "Emily Rodriguez",
+      role: "4th Year Business",
+      content: "Finally, a platform that puts all student services in one place. It's a game-changer!",
+      rating: 5
+    }
+  ]
+
+  const stats = [
+    { number: "10,000+", label: "Active Students" },
+    { number: "500+", label: "Courses Available" },
+    { number: "50+", label: "Faculty Members" },
+    { number: "99%", label: "Student Satisfaction" }
+  ]
+
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
-      <header className="fixed top-0 left-0 right-0 z-50 px-4 py-2 bg-background/80 backdrop-blur-lg border-b">
-        <div className="container mx-auto flex h-14 items-center">
-          <Link href="/" className="flex items-center gap-2 font-bold text-lg">
-            <Icons.logo className="h-6 w-6 text-primary" />
-            <span className="font-headline">Action College CampusAI</span>
-          </Link>
-          <nav className="ml-auto flex items-center gap-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
-            <Button asChild className="font-bold">
-              <Link href="/register">Register <ArrowRight className="ml-2" /></Link>
-            </Button>
-          </nav>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      {/* Navigation */}
+      <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <GraduationCap className="h-8 w-8 text-blue-600 mr-3" />
+              <span className="text-2xl font-bold text-gray-900">ACTION_COLLEGE</span>
+            </div>
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" onClick={() => router.push('/login')}>
+                Sign In
+              </Button>
+              <Button onClick={() => router.push('/register')}>
+                Get Started
+              </Button>
+            </div>
+          </div>
         </div>
-      </header>
+      </nav>
 
-      <main className="flex-1">
-        <section className="relative w-full pt-32 pb-20 md:pt-48 md:pb-32 flex items-center justify-center text-center text-primary-foreground">
-          <div className="absolute inset-0 z-0">
-            <Image 
-              src="https://placehold.co/1920x1080.png" 
-              alt="Futuristic university campus" 
-              layout="fill" 
-              objectFit="cover" 
-              className="opacity-20"
-              data-ai-hint="futuristic university campus"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-primary to-background" />
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+              Welcome to the Future of
+              <span className="text-blue-600 block">Campus Life</span>
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+              ACTION_COLLEGE is your all-in-one platform for academic excellence, 
+              community engagement, and personal growth. Experience education reimagined.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button size="lg" onClick={() => router.push('/register')} className="text-lg px-8 py-6">
+                Start Your Journey
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+              <Button variant="outline" size="lg" className="text-lg px-8 py-6">
+                Learn More
+              </Button>
+            </div>
           </div>
+        </div>
+      </section>
 
-          <div className="container relative z-10 px-4 md:px-6">
-            <div className="max-w-3xl mx-auto">
-              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl font-headline bg-clip-text text-transparent bg-gradient-to-b from-primary-foreground to-primary-foreground/70">
-                The Future of Campus Life at Action College
-              </h1>
-              <p className="mt-6 max-w-xl mx-auto text-lg text-primary-foreground/80 md:text-xl">
-                Action College CampusAI is your all-in-one platform for a smarter, more connected university experience at Université Omar Bongo.
+      {/* Stats Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-4xl font-bold text-blue-600 mb-2">{stat.number}</div>
+                <div className="text-gray-600">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Everything You Need to Succeed
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Our comprehensive platform provides all the tools and resources 
+              you need for an exceptional academic experience.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {features.map((feature, index) => (
+              <Card key={index} className="hover:shadow-lg transition-shadow border-0 bg-white">
+                <CardHeader>
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 mb-4">
+                    {feature.icon}
+                  </div>
+                  <CardTitle className="text-xl">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <CardDescription className="text-base text-gray-600">
+                    {feature.description}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              What Students Say
+            </h2>
+            <p className="text-xl text-gray-600">
+              Join thousands of satisfied students who have transformed their academic journey
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {testimonials.map((testimonial, index) => (
+              <Card key={index} className="border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center mb-4">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <Star key={i} className="h-5 w-5 text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 mb-4 italic">"{testimonial.content}"</p>
+                  <div>
+                    <div className="font-semibold text-gray-900">{testimonial.name}</div>
+                    <div className="text-sm text-gray-500">{testimonial.role}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-blue-600">
+        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+          <h2 className="text-4xl font-bold text-white mb-4">
+            Ready to Transform Your Academic Experience?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8">
+            Join thousands of students who are already using ACTION_COLLEGE 
+            to achieve their academic goals.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button 
+              size="lg" 
+              variant="secondary" 
+              onClick={() => router.push('/register')}
+              className="text-lg px-8 py-6"
+            >
+              Get Started Today
+            </Button>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="text-lg px-8 py-6 border-white text-white hover:bg-white hover:text-blue-600"
+            >
+              Contact Us
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-gray-900 text-white py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <div className="flex items-center mb-4">
+                <GraduationCap className="h-8 w-8 text-blue-400 mr-3" />
+                <span className="text-xl font-bold">ACTION_COLLEGE</span>
+              </div>
+              <p className="text-gray-400">
+                Empowering students with the tools they need to succeed in their academic journey.
               </p>
-              <div className="mt-8 flex justify-center gap-4">
-                <Button size="lg" asChild className="font-bold text-lg">
-                  <Link href="/register">Get Started for Free</Link>
-                </Button>
-                <Button size="lg" variant="secondary" asChild className="font-bold text-lg">
-                  <Link href="#features">Learn More</Link>
-                </Button>
-              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Platform</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li>Academics</li>
+                <li>Calendar</li>
+                <li>Community</li>
+                <li>Library</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Support</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li>Help Center</li>
+                <li>Contact Us</li>
+                <li>Privacy Policy</li>
+                <li>Terms of Service</li>
+              </ul>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4">Connect</h3>
+              <ul className="space-y-2 text-gray-400">
+                <li>Twitter</li>
+                <li>LinkedIn</li>
+                <li>Facebook</li>
+                <li>Instagram</li>
+              </ul>
             </div>
           </div>
-        </section>
-
-        <section id="features" className="w-full py-16 md:py-24 bg-secondary/50">
-          <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center">
-              <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Key Features</div>
-                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">Everything a student needs</h2>
-                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  From academic planning to social connections, Action College CampusAI simplifies your university journey.
-                </p>
-              </div>
-            </div>
-            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:max-w-none lg:grid-cols-3 pt-12">
-              <FeatureCard
-                icon={<MessageSquare className="w-8 h-8 text-accent" />}
-                title="AI Assistant"
-                description="Get instant answers about campus life, events, and resources through our AI."
-              />
-              <FeatureCard
-                icon={<GraduationCap className="w-8 h-8 text-accent" />}
-                title="Smart Dashboard"
-                description="Personalized academic insights, grade projections, and course recommendations."
-              />
-              <FeatureCard
-                icon={<Map className="w-8 h-8 text-accent" />}
-                title="Campus Navigator"
-                description="Interactive map with real-time info on library hours, dining hall menus, and more."
-              />
-              <FeatureCard
-                icon={<BrainCircuit className="w-8 h-8 text-accent" />}
-                title="Study Optimizer"
-                description="AI-powered planning to find your optimal study times and recommended resources."
-              />
-              <FeatureCard
-                icon={<Calendar className="w-8 h-8 text-accent" />}
-                title="University Calendar"
-                description="Synced with the official Action College calendar so you never miss an important date."
-              />
-              <FeatureCard
-                icon={<CreditCard className="w-8 h-8 text-accent" />}
-                title="Online Payments"
-                description="A safe and easy way to pay your tuition fees directly through the app."
-              />
-            </div>
-          </div>
-        </section>
-      </main>
-      
-      <footer className="bg-primary text-primary-foreground">
-        <div className="container py-6 flex flex-col items-center justify-between md:flex-row">
-          <p className="text-sm">© {new Date().getFullYear()} Action College CampusAI. All rights reserved.</p>
-          <div className="flex gap-4 mt-4 md:mt-0">
-            <Link href="#" className="text-sm hover:underline">Privacy Policy</Link>
-            <Link href="#" className="text-sm hover:underline">Terms of Service</Link>
+          
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
+            <p>&copy; 2025 ACTION_COLLEGE. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
-  )
-}
-
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) {
-  return (
-    <Card className="h-full transform hover:-translate-y-2 transition-transform duration-300 ease-in-out shadow-lg hover:shadow-xl">
-      <CardHeader>
-        <div className="p-3 bg-accent/10 rounded-full w-fit mb-4">{icon}</div>
-        <CardTitle className="font-headline">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
   )
 }
