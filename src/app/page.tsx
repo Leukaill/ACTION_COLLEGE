@@ -55,7 +55,7 @@ export default function LandingPage() {
     {
       name: "Sarah Johnson",
       role: "3rd Year Computer Science",
-      content: "ACTION_COLLEGE has transformed how I manage my academic life. Everything is so organized and accessible!",
+      content: "Action College has transformed how I manage my academic life. Everything is so organized and accessible!",
       rating: 5
     },
     {
@@ -73,10 +73,10 @@ export default function LandingPage() {
   ]
 
   const stats = [
-    { number: "10,000+", label: "Active Students" },
-    { number: "500+", label: "Courses Available" },
-    { number: "50+", label: "Faculty Members" },
-    { number: "99%", label: "Student Satisfaction" }
+    { number: "5,000+", label: "Active Students" },
+    { number: "200+", label: "Courses Available" },
+    { number: "25+", label: "Faculty Members" },
+    { number: "98%", label: "Student Satisfaction" }
   ]
 
   return (
@@ -87,7 +87,7 @@ export default function LandingPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <GraduationCap className="h-8 w-8 text-blue-600 mr-3" />
-              <span className="text-2xl font-bold text-gray-900">ACTION_COLLEGE</span>
+              <span className="text-2xl font-bold text-gray-900">Action College</span>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="ghost" onClick={() => router.push('/login')}>
@@ -106,11 +106,11 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-              Welcome to the Future of
-              <span className="text-blue-600 block">Campus Life</span>
+              Welcome to
+              <span className="text-blue-600 block">Action College</span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              ACTION_COLLEGE is your all-in-one platform for academic excellence, 
+              Action College is your all-in-one platform for academic excellence, 
               community engagement, and personal growth. Experience education reimagined.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

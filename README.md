@@ -1,4 +1,4 @@
-# ACTION_COLLEGE - Production-Ready Campus Management Platform
+# Action College - Production-Ready Campus Management Platform
 
 A comprehensive, production-ready campus management platform built with Next.js, TypeScript, Tailwind CSS, and Supabase. This platform provides students with a modern, intuitive interface for managing their academic life.
 
